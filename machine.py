@@ -272,6 +272,9 @@ def lookup_prim(symbol, operations):
 def set_register_contents(machine, regname, content):
     set_contents(machine.get_register(regname), content)
 
+def get_register_contents(machine, regname):
+    return get_contents(machine.get_register(regname))
+
 def make_test(inst, machine, labels, operations, flag, pc):
     print "inst is", inst
     condition = test_condition(inst)
@@ -375,7 +378,7 @@ def make_perform(inst, machine, stack ,pc):
 
         return perform_proc
 
-def test():
+def test_gcd():
 
     def op_equal(args):
         print "op_equal: ", args
@@ -401,5 +404,5 @@ def test():
     return machine
 
 if __name__ == "__main__":
-    mac = test()
-    mac.start()
+    mac = test_fib()
+#    mac.start()
