@@ -45,10 +45,8 @@ def set_contents(register, value):
     register.set(value)
 
 
-def make_machine(register_names, ops, controller_text):
+def make_machine(ops, controller_text):
     machine = Machine()
-    for rname in register_names:
-        machine.allocate_register(rname)
 
     machine.install_operations(ops)
     machine.install_instruction_sequence(assemble(controller_text,machine))
@@ -83,7 +81,11 @@ class Machine(object):
         return 'done'
 
     def get_register(self, name):
-        return self.register_table[name]
+        try:
+            return self.register_table[name]
+        except KeyError:
+            self.allocate_register(name)
+            return self.register_table[name]
 
     def get_stack(self):
         return self.stack
@@ -377,4 +379,3 @@ def make_perform(inst, machine, stack ,pc):
             advance_pc(pc)
 
         return perform_proc
-

@@ -5,8 +5,8 @@ from machine import *
 import unittest
 
 def fib_machine():
-    mac = make_machine(['continue', 'n', 'val'],
-                       {
+    mac = make_machine(
+        {
             '-': lambda args: args[0] - args[1],
             '+': lambda args: args[0] + args[1],
             '<': lambda args: args[0] < args[1],
@@ -53,19 +53,19 @@ def gcd_machine():
         print "op_equal: ", args
         return  args[0] == args[1]
 
-    mac = make_machine(['a', 'b', 't'],
-                           {'rem': lambda args: args[0] % args[1],
-                            '=' : op_equal},
-                           """
-                           (test-b
-                               (test (op =) (reg b) (const 0))
-                               (branch (label gcd-done))
-                               (assign t (op rem) (reg a) (reg b))
-                               (assign a (reg b))
-                              (assign b (reg t))
-                               (goto (label test-b))
-                            gcd-done)"""
-                           )
+    mac = make_machine(
+        {'rem': lambda args: args[0] % args[1],
+         '=' : op_equal},
+        """
+        (test-b
+            (test (op =) (reg b) (const 0))
+            (branch (label gcd-done))
+            (assign t (op rem) (reg a) (reg b))
+            (assign a (reg b))
+            (assign b (reg t))
+            (goto (label test-b))
+         gcd-done)"""
+        )
 
     return mac
 
