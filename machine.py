@@ -75,7 +75,6 @@ class Machine(object):
     def execute(self):
         while True:
             insts = get_contents(self.pc)
-            print "insts: ", insts
             if insts == []: break
             proc = instruction_execution_proc(insts[0])
             proc()
@@ -92,8 +91,6 @@ class Machine(object):
         return self.the_ops
 
     def install_instruction_sequence(self, seq):
-        print "install_instruction_sequence"
-        print seq
         self.the_instruction_sequence = seq
 
     def allocate_register(self, name):
@@ -139,8 +136,6 @@ def lookup_label(labels, label_name):
 
 # ここで渡されるinstsは[[ 命令文, []], ...]という形をしているはず
 def update_insts(insts, labels, machine):
-    print """ update_insts """
-    print insts
     pc = machine.get_register('pc')
     flag = machine.get_register('flag')
     stack = machine.get_stack()
@@ -189,7 +184,6 @@ def make_execution_procedure(inst, labels, machine, pc, flag, stack, ops):
     elif ins == 'perform':
         return make_perform(inst, machine, stack, pc)
     else:
-        print ins
         raise InvalidInstError
 
 def make_assign(inst, machine, labels, ops, pc):
@@ -211,7 +205,6 @@ def make_assign(inst, machine, labels, ops, pc):
     return assign_proc
 
 def advance_pc(pc):
-    print "pc:", get_contents(pc)
     set_contents(pc, get_contents(pc)[1:])
 
 def is_operation_exp(exp):
@@ -246,23 +239,17 @@ def stack_inst_reg_name(inst):
     return inst[1]
 
 def make_operation_exp(exp, machine, labels, operations):
-    print "make_operation_exp:", exp, operations
     op = lookup_prim(operation_exp_op(exp), operations)
     aprocs = map(lambda e: make_primitive_exp(e, machine, labels),
                  operation_exp_operands(exp))
 
-    print "op :", op
-    print "aprocs: ", aprocs
-
     def op_proc():
         args = map(lambda p: p(), aprocs)
-        print "op_proc: ", args
         return op(args)
 
     return lambda : op_proc()
 
 def lookup_prim(symbol, operations):
-    print "lookup_prim:", symbol
     try:        
         val = operations[symbol]
         return val
@@ -276,7 +263,6 @@ def get_register_contents(machine, regname):
     return get_contents(machine.get_register(regname))
 
 def make_test(inst, machine, labels, operations, flag, pc):
-    print "inst is", inst
     condition = test_condition(inst)
     if is_operation_exp(condition):
         condition_proc = make_operation_exp(condition, machine, labels, operations)
@@ -291,7 +277,6 @@ def test_condition(test_instruction):
     return test_instruction[1:]
 
 def make_primitive_exp(exp, machine, labels):
-    print "make_primitive_exp: ", exp
     if is_constant_exp(exp):
         c = constant_exp_value(exp)
         return lambda : c
