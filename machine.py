@@ -378,31 +378,3 @@ def make_perform(inst, machine, stack ,pc):
 
         return perform_proc
 
-def test_gcd():
-
-    def op_equal(args):
-        print "op_equal: ", args
-        return  args[0] == args[1]
-
-    machine = make_machine(['a', 'b', 't'],
-                           {'rem': lambda args: args[0] % args[1],
-                            '=' : op_equal},
-                           """
-                           (test-b
-                               (test (op =) (reg b) (const 0))
-                               (branch (label gcd-done))
-                               (assign t (op rem) (reg a) (reg b))
-                               (assign a (reg b))
-                               (assign b (reg t))
-                               (goto (label test-b))
-                            gcd-done)"""
-                           )
-
-    set_register_contents(machine, 'a', 206)
-    set_register_contents(machine, 'b', 40)
-
-    return machine
-
-if __name__ == "__main__":
-    mac = test_fib()
-#    mac.start()

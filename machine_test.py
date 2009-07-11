@@ -4,7 +4,7 @@
 from machine import *
 import unittest
 
-def mac_fib():
+def fib_machine():
     mac = make_machine(['continue', 'n', 'val'],
                        {
             '-': lambda args: args[0] - args[1],
@@ -47,13 +47,35 @@ def mac_fib():
                        )
     return mac
 
+def gcd_machine():
+
+    def op_equal(args):
+        print "op_equal: ", args
+        return  args[0] == args[1]
+
+    mac = make_machine(['a', 'b', 't'],
+                           {'rem': lambda args: args[0] % args[1],
+                            '=' : op_equal},
+                           """
+                           (test-b
+                               (test (op =) (reg b) (const 0))
+                               (branch (label gcd-done))
+                               (assign t (op rem) (reg a) (reg b))
+                               (assign a (reg b))
+                              (assign b (reg t))
+                               (goto (label test-b))
+                            gcd-done)"""
+                           )
+
+    return mac
+
 class TestMachine(unittest.TestCase):
     
     def setUp(self):
         pass
 
     def testfib(self):
-        mac = mac_fib()
+        mac = fib_machine()
         set_register_contents(mac, 'n', 5)
         mac.start()
         self.assertEqual(get_register_contents(mac, 'val'), 5)
@@ -62,5 +84,14 @@ class TestMachine(unittest.TestCase):
         mac.start()
         self.assertEqual(get_register_contents(mac, 'val'), 8)
 
+    def testgcd(self):
+        mac = gcd_machine()
+
+        set_register_contents(mac, 'a', 35)
+        set_register_contents(mac, 'b', 49)
+        
+        mac.start()
+        self.assertEqual(get_register_contents(mac, 'a'), 7)
+        
 if __name__ == '__main__':
     unittest.main()
