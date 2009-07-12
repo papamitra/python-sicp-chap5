@@ -27,16 +27,28 @@ class Register(object):
 class Stack(object):
 
     def __init__(self):
-        self.stack=[]
+        self.initialize()
 
     def push(self, value):
         self.stack.append(value)
+        self.number_pushes += 1
+        self.current_depth += 1
+        self.max_depth = max(self.max_depth, self.current_depth)
 
     def pop(self):
-        return self.stack.pop()
+        ret = self.stack.pop()
+        self.current_depth -= 1
+        return ret
 
     def initialize(self):
         self.stack = []
+        self.number_pushes = 0
+        self.max_depth = 0
+        self.current_depth = 0
+
+    def print_statistics(self):
+        print 'total_pushes =', self.number_pushes
+        print 'maximum_depth =', self.max_depth
 
 def get_contents(register):
     return register.get()
