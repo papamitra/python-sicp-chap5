@@ -62,7 +62,7 @@ def gcd_machine():
                                (branch (label gcd-done))
                                (assign t (op rem) (reg a) (reg b))
                                (assign a (reg b))
-                              (assign b (reg t))
+                               (assign b (reg t))
                                (goto (label test-b))
                             gcd-done)"""
                            )
@@ -92,6 +92,27 @@ class TestMachine(unittest.TestCase):
         
         mac.start()
         self.assertEqual(get_register_contents(mac, 'a'), 7)
+
+    def testbreak(self):
+        mac = gcd_machine()
+        mac.set_breakpoint('test-b', 4)
+
+        set_register_contents(mac, 'a', 35)
+        set_register_contents(mac, 'b', 49)
+
+        mac.start()
+        self.assertEqual(get_register_contents(mac, 't'), 35)
+        self.assertEqual(get_register_contents(mac, 'a'), 35)
+        self.assertEqual(get_register_contents(mac, 'b'), 49)
+
+        mac.proceed()
+        self.assertEqual(get_register_contents(mac, 't'), 14)
+        self.assertEqual(get_register_contents(mac, 'a'), 49)
+        self.assertEqual(get_register_contents(mac, 'b'), 35)
         
+        mac.cancel_breakpoint('test-b', 4)
+        mac.proceed()
+        self.assertEqual(get_register_contents(mac, 'a'), 7)
+
 if __name__ == '__main__':
     unittest.main()

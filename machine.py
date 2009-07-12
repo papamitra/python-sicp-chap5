@@ -72,11 +72,24 @@ class Machine(object):
 
         self.the_ops={'initialize_stack': lambda args: self.stack.initialize()}
 
+        self.breakpoints = {}
+
+        self.continuation = self.start
+
     def execute(self):
         while True:
             insts = get_contents(self.pc)
             if insts == []: break
             proc = instruction_execution_proc(insts[0])
+
+            if self.breakpoints.has_key(insts[0][1]):
+                def cont():
+                    proc()
+                    self.execute()
+
+                self.continuation = cont
+                return 'break'
+
             proc()
 
         return 'done'
@@ -105,6 +118,29 @@ class Machine(object):
     def start(self):
         set_contents(self.pc, self.the_instruction_sequence)
         self.execute()
+
+    def set_labels(self, labels):
+        self.labels = labels
+
+    def set_breakpoint(self, labelname, n):
+        try:
+            insts = lookup_label(self.labels, labelname)
+            self.breakpoints[insts[n-1][1]] = True
+        except:
+            print "Failed to set breakpoint"
+        
+    def cancel_breakpoint(self, labelname, n):
+        try:
+            insts = lookup_label(self.labels, labelname)
+            del(self.breakpoints[insts[n-1][1]])
+        except:
+            print "Failed to cancel breakpoint"
+
+    def proceed(self):
+        self.continuation()
+
+    def cancel_all_breakpoint(self):
+        self.breakpoints = {}
 
 def assemble( controller_text, machine):
     def receive(insts, labels):
@@ -140,6 +176,8 @@ def update_insts(insts, labels, machine):
     flag = machine.get_register('flag')
     stack = machine.get_stack()
     ops = machine.operations()
+
+    machine.set_labels(labels)
 
     def update_proc(inst):
         set_instruction_execition_proc(inst, 
