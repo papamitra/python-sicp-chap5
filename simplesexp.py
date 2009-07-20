@@ -65,13 +65,13 @@ class Reader(object):
     self.scanner = Scanner([
       (r"\s+", self("skip")),
       (r";[^\n]*\n", self("skip")),
+      (r"'", self("quote")),
       (r""""(((?<=\\)")|[^"])*((?<!\\)")""", self("str")),
       (r"(\(|\[)", self("open")),
       (r"(\)|\])", self("close")),
       (r"(([\d]+|(((\d+)?\.[\d]+)|([\d]+\.)))e[\+\-]?[\d]+)|(((\d+)?\.[\d]+)|([\d]+\.))", self("number")),
       (r"\-?((0x[\da-f]+)|(0[0-7]+)|([1-9][\d]*)|0)[l]?", self("number")),
       (r"""%s([^\(\[\)\]\s"]+)"""%self.symbol_marker, self("symbol")),
-      (r"'", self("quote")),
       (r"""([^\(\[\)\]\s"]+)""", self("ident")),
       (r"""".*""", self("unterm_str")),
       (r".*", self("unknown_token"))
@@ -265,7 +265,7 @@ foo
   """)
   expect = [
     [Ident(u'あああ'), Ident(u'hoge->fuga123'), Pair([1, Pair([2, 3])]), u'hoge"hoge',
-     Ident(u'foo'), u'aaa', True, Ident(u'<='), Symbol(u'foo'),
+     Ident(u'foo'), u'aaa', True, Ident(u'<='), [Ident(u'quote'), Ident(u'foo')],
      u'hogehoge\nfoo\n', [5,6]],
     {u'いいい': 
       {u'a-1': u'vvv', 
