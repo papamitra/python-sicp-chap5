@@ -61,6 +61,7 @@ class Reader(object):
     self.paren_stack = []
     self.source = value
     self.pos = 0
+    self.quoted = False
     self.scanner = Scanner([
       (r"\s+", self("skip")),
       (r";[^\n]*\n", self("skip")),
@@ -70,6 +71,7 @@ class Reader(object):
       (r"(([\d]+|(((\d+)?\.[\d]+)|([\d]+\.)))e[\+\-]?[\d]+)|(((\d+)?\.[\d]+)|([\d]+\.))", self("number")),
       (r"\-?((0x[\da-f]+)|(0[0-7]+)|([1-9][\d]*)|0)[l]?", self("number")),
       (r"""%s([^\(\[\)\]\s"]+)"""%self.symbol_marker, self("symbol")),
+      (r"'", self("quote")),
       (r"""([^\(\[\)\]\s"]+)""", self("ident")),
       (r"""".*""", self("unterm_str")),
       (r".*", self("unknown_token"))
@@ -80,7 +82,12 @@ class Reader(object):
     return self.parse(self.result)
 
   def append(self, v):
-    self.last().append(Token(v, self.pos))
+    if self.quoted:
+      quote_lst = self.paren_stack.pop()[1]
+      quote_lst.append(Token(v, self.pos))
+      self.quoted = False
+    else:
+      self.last().append(Token(v, self.pos))
  
   def __call__(self, name):
     def _(scanner, s):
@@ -90,9 +97,20 @@ class Reader(object):
  
   def unknown_token(self,s): self.raise_error("unknown token: %s"%s)
   def skip(self, _): pass
+  def quote(self, _):
+    new_lst = []
+    self.last().append(new_lst)
+    self.paren_stack.append(['quote', new_lst])
+    self.append(Ident('quote'))
+    self.quoted = True
   def open(self, s):
       new_lst = []
-      self.last().append(new_lst)
+      if self.quoted:
+        quote_lst = self.paren_stack.pop()[1]
+        quote_lst.append(new_lst)
+        self.quoted = False
+      else:
+        self.last().append(new_lst)
       self.paren_stack.append([s, new_lst])
   def close(self, s):
       if not self.paren_stack:
