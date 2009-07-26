@@ -257,7 +257,7 @@ def make_operation_exp(exp, machine, labels, operations):
 
     def op_proc():
         args = map(lambda p: p(), aprocs)
-        return op(args)
+        return op(*args)
 
     return lambda : op_proc()
 
