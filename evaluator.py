@@ -4,6 +4,7 @@
 from machine import *
 
 class VariableUnassignedError(Error): pass
+class UnboundVariableSetError(Error): pass
 
 def is_self_evaluating(exp):
     if isinstance(exp, int): return True
@@ -35,6 +36,9 @@ def is_lambda(exp):
 
 def is_begin(exp):
     return is_tagged_list(exp, 'begin')
+
+def begin_actions(exp):
+    return exp[1:]
 
 def is_application(exp):
     return isinstance(exp, list)
@@ -136,8 +140,68 @@ def assignment_variable(exp):
 def assignment_value(exp):
     return exp[2]
 
-def set_variable_value!(var, val, env):
-    
+def set_variable_value(var, val, env):
+    for frame in env:
+        if frame.has_key(var):
+            frame[var] = val
+            break
+    else:
+        raise UnboundVariableSetError()
+
+def definition_variable(exp):
+    if isinstance(exp[1], Symbol):
+        return exp[1]
+    else:
+        return exp[1][0]
+
+def definition_value(exp):
+    if isinstance(exp[1], Symbol):
+        return exp[2]
+    else:
+        return make_lambda(exp[1][1:], exp[2:])
+
+def make_lambda(parameters, body):
+    return [Symbol("lambda"), parameters, body]
+
+def define_variable(var, val, env):
+    env[0][var] = val
+
+def setup_environment():
+    env = dict(the_primitive_procs)
+    env.update({Symbol('true'): True})
+    env.update({Symbol('false'): False})
+
+    initial_env = [env]
+    return initial_env
+
+the_global_environment = setup_environment()
+
+def get_global_environment():
+    return the_global_environment
+
+class Input(object):
+    input_line = ""
+
+    def prompt_for_input(self,prompt):
+        self.input_line = raw_input(prompt)
+        print self.input_line
+
+    def read_input_line(self):
+        return self.input_line
+
+cinput = Input()
+
+def announce_output(string):
+    print string
+
+def user_print(object):
+    print object
+
+def is_true(exp):
+    return exp != False
+
+def is_false(exp):
+    return exp == False
 
 ops = {
     'self-evaluating?' : is_self_evaluating,
@@ -148,6 +212,7 @@ ops = {
     'if?' : is_if,
     'lambda?' : is_lambda,
     'begin?' : is_begin,
+    'begin-actions' : begin_actions,
     'application?' : is_application,
     'lookup-variable-value' : lookup_variable_value,
     'text-of-quotation' : text_of_quotation,
@@ -159,7 +224,7 @@ ops = {
     'empty-arglist' : empty_arglist,
     'no-operands?' : is_no_operands,
     'first-operand' : first_operand,
-    'last-operand' : is_last_operand,
+    'last-operand?' : is_last_operand,
     'adjoin-arg' : adjoin_arg,
     'rest-operands' : rest_operands,
     'primitive-procedure?' : is_primitive_procedure,
@@ -170,10 +235,32 @@ ops = {
     'procedure-body' : procedure_body,
     'extend-environment' : extend_environment,
     'first-exp' : first_exp,
+    'rest-exps' : rest_exps,
     'last-exp?' : is_last_exp,
     'if-predicate' : if_predicate,
     'if-consequent' : if_consequent,
     'if-alternative' : if_alternative,
     'assignment-variable' : assignment_variable,
     'assignment-value' : assignment_value,
+    'set-variable-value!' : set_variable_value,
+    'define-variable!' : define_variable,
+    'definition-variable' : definition_variable,
+    'definition-value' : definition_value,
+    'setup-environment' : setup_environment,
+    'get-global-environment' : get_global_environment,
+    'prompt-for-input' : cinput.prompt_for_input,
+    'read' : cinput.read_input_line,
+    'announce-output' : announce_output,
+    'user-print' : user_print,
+    'true?': is_true,
+    'false?' : is_false,
 }
+
+if __name__ == '__main__':
+    f = open("./evaluator.scm")
+    input = reduce(lambda x,y: x+y, f.readlines())
+    mac = make_machine(['exp', 'env', 'val', 'proc', 'argl', 'continue', 'unev'],
+                       ops,
+                       input)
+    mac.start()
+

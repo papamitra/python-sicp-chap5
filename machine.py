@@ -82,7 +82,7 @@ class Machine(object):
         self.stack = Stack()
         self.the_instruction_sequence = []
 
-        self.the_ops={'initialize_stack': lambda args: self.stack.initialize()}
+        self.the_ops={'initialize-stack': lambda : self.stack.initialize()}
 
     def execute(self):
         while True:
@@ -194,8 +194,9 @@ def make_execution_procedure(inst, labels, machine, pc, flag, stack, ops):
         return make_restore(inst, machine, stack, pc)
 
     elif ins == 'perform':
-        return make_perform(inst, machine, stack, pc)
+        return make_perform(inst, machine, labels, ops, pc)
     else:
+        print "InvalidInst: ",  inst
         raise InvalidInstError
 
 def make_assign(inst, machine, labels, ops, pc):
@@ -266,6 +267,7 @@ def lookup_prim(symbol, operations):
         val = operations[symbol]
         return val
     except:
+        print "unkown operator", symbol
         raise UnknownOperationError()
 
 def set_register_contents(machine, regname, content):
@@ -361,7 +363,7 @@ def make_goto(inst, machine, labels, pc):
 
     raise BadInstructionError()
 
-def make_perform(inst, machine, stack ,pc):
+def make_perform(inst, machine, labels, operations ,pc):
     def perform_action(inst):
         return inst[1:]
 

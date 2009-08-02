@@ -144,5 +144,48 @@ class TestEvaluator(unittest.TestCase):
         mac.start()
         self.assertEqual(get_register_contents(mac, 'env'), [{Ident(u'x'):1, Ident(u'y'):2, Ident(u'z'):3}])
 
+    def test_set_variable_value(self):
+        mac = make_machine(['proc', 'unev', 'env', 'argl'],
+                           ops,
+                           """(
+                            (assign proc (const ('procedure (x y z) (+ x y z) ()) ))
+                            (assign argl (const (1 2 3)))
+                            (assign unev (op procedure-parameters) (reg proc))
+                            (assign env (op procedure-environment) (reg proc))
+                            (assign env (op extend-environment)
+                                        (reg unev) (reg argl) (reg env))
+                            (assign proc (const ('procedure (a b c) (+ a b c) ()) ))
+                            (assign argl (const (1 2 3)))
+                            (assign unev (op procedure-parameters) (reg proc))
+                            (assign env (op extend-environment)
+                                        (reg unev) (reg argl) (reg env))
+                            (perform (op set-variable-value!) (const 'a) (const -1) (reg env))
+                           )""")
+        mac.start()
+        self.assertEqual(get_register_contents(mac, 'env'), [{Ident(u'a'):-1, Ident(u'b'):2, Ident(u'c'):3}, \
+                                                                 {Ident(u'x'):1, Ident(u'y'):2, Ident(u'z'):3}])
+
+    def test_definition(self):
+        mac = make_machine(['val', 'unev', 'env'],
+                           ops,
+                           """(
+                             (assign env (const ((dict ((a . 2))))))
+                             (assign unev (const a))
+                             (assign val (const 1))
+                             (perform (op define-variable!) (reg unev) (reg val) (reg env))
+                           )""")
+        mac.start()
+        self.assertEqual(get_register_contents(mac, 'env'), [{Ident(u'a'):1}])
+
+    def _test_prompt_for(self):
+        mac = make_machine(['exp'],
+                           ops,
+                           """(
+                             (perform (op prompt-for-input) (const "test"))
+                             (assign exp (op read))
+                           )""")
+        mac.start()
+        self.assertEqual(get_register_contents(mac, 'exp'), "test input")
+
 if __name__ == '__main__':
     unittest.main()
