@@ -31,6 +31,7 @@
  (goto (label unknown-expression-type))
 
  ev-self-eval
+ (perform (op announce-output) (const "ev-self-eval"))
  (assign val (reg exp))
  (goto (reg continue))
  
@@ -50,6 +51,7 @@
  (goto (reg continue))
 
  ev-application
+ (perform (op announce-output) (const "ev-application"))
  (save continue)
  (save env)
  (assign unev (op operands) (reg exp))
@@ -59,6 +61,7 @@
  (goto (label eval-dispatch))
 
  ev-appl-did-operator
+ (perform (op announce-output) (const "ev-appl-did-operator"))
  (restore unev)
  (restore env)
  (assign argl (op empty-arglist))
@@ -96,6 +99,8 @@
  (goto (label apply-dispatch))
 
  apply-dispatch
+ (perform (op announce-output) (const "apply-dispatch"))
+ (perform (op user-print) (reg proc))
  (test (op primitive-procedure?) (reg proc))
  (branch (label primitive-apply))
  (test (op compound-procedure?) (reg proc))
@@ -199,10 +204,12 @@
  (goto (label read-eval-print-loop))
 
  unknown-expression-type
+ (perform (op announce-output) (const "unkown-expression-type-error"))
  (assign val (const unkown-expression-type-error))
  (goto (label signal-error))
 
  unknown-procedure-type
+ (perform (op announce-output) (const "unkown-procedure-type-error"))
  (restore continue)
  (assign val (const unkown-procedure-type-error))
  (goto (label signal-error))

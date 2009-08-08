@@ -15,7 +15,7 @@ def is_self_evaluating(exp):
     return False
 
 def is_variable(exp):
-    if isinstance(exp, Symbol): return True
+    if isinstance(exp, Ident): return True
 
     return False
 
@@ -80,7 +80,7 @@ def first_operand(exp):
     return exp[0]
 
 def is_last_operand(exp):
-    return 0 == len(exp)
+    return 1 == len(exp)
 
 def adjoin_arg(arg, arglist):
     return arglist + [arg]
@@ -98,8 +98,9 @@ the_primitive_procs = {
     '+' : lambda *args: reduce(lambda x,y: x+y, args),
     }
     
-def apply_primitive_procedure(proc, *args):
-    return the_primitive_procs[proc[1]](*args)
+# 引数argsはリストになっている.
+def apply_primitive_procedure(proc, args):
+    return proc[1](*args)
 
 def procedure_parameters(proc):
     return proc[1]
@@ -168,6 +169,8 @@ def define_variable(var, val, env):
 
 def setup_environment():
     env = dict(the_primitive_procs)
+    for key in env.keys():
+        env[key] = [Symbol('primitive'), env[key]]
     env.update({Symbol('true'): True})
     env.update({Symbol('false'): False})
 
@@ -183,11 +186,11 @@ class Input(object):
     input_line = ""
 
     def prompt_for_input(self,prompt):
-        self.input_line = raw_input(prompt)
+        self.input_line = raw_input(prompt + "\n")
         print self.input_line
 
     def read_input_line(self):
-        return self.input_line
+        return read(self.input_line)[0]
 
 cinput = Input()
 

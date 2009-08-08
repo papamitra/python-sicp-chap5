@@ -16,6 +16,16 @@ class TestEvaluator(unittest.TestCase):
         self.assertTrue(is_self_evaluating(3000000000000.1234))
         self.assertTrue(is_self_evaluating('test'))
 
+        mac = make_machine(['exp'],
+                           ops,
+                           """(
+                             (assign exp (const (+ 1 2)))
+                             (test (op self-evaluating?) (reg exp))
+                           )""")
+        mac.start()
+
+        self.assertEqual(get_register_contents(mac, 'flag'), 0)
+
     def test_isvariable(self):
         self.assertTrue(is_variable(Symbol('a')))
 
